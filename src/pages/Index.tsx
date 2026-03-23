@@ -48,7 +48,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f7]">
-      <AppHeader onNewOrder={() => setShowNewOrder(true)} />
+      <AppHeader onNewOrder={() => setShowNewOrder(true)} orders={orders} />
 
       <div className="container mx-auto px-4 py-6">
         <StatsBar orders={allOrders} />
