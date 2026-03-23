@@ -1,14 +1,25 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Header } from "@/components/Header"
+import { Hero } from "@/components/Hero"
+import { AboutTrainer } from "@/components/AboutTrainer"
+import { Benefits } from "@/components/Benefits"
+import { Booking } from "@/components/Booking"
+import { Testimonials } from "@/components/Testimonials"
+import { FAQ } from "@/components/FAQ"
+import { FinalCTA } from "@/components/FinalCTA"
+import { Footer } from "@/components/Footer"
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 color-black text-black">Добро пожаловать!</h1>
-        <p className="text-xl text-gray-600">тут будет отображаться ваш проект</p>
-      </div>
-    </div>
-  );
-};
-
-export default Index;
+    <main className="min-h-screen bg-background">
+      <Header />
+      <Hero />
+      <AboutTrainer />
+      <Benefits />
+      <Booking />
+      <Testimonials />
+      <FAQ />
+      <FinalCTA />
+      <Footer />
+    </main>
+  )
+}
