@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "GET orders list returns 200",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET orders filtered by status new returns 200",
+      "method": "GET",
+      "path": "/?status=new",
+      "expectedStatus": 200
+    }
+  ]
+}

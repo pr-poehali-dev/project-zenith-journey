@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Order, OrderStatus } from '@/types/order';
-import { mockOrders } from '@/data/mockOrders';
+import { fetchOrders, createOrder, updateOrderStatus } from '@/api/orders';
 import { AppHeader } from '@/components/AppHeader';
 import { StatsBar } from '@/components/StatsBar';
 import { OrderFilters } from '@/components/OrderFilters';
@@ -10,32 +10,40 @@ import { NewOrderModal } from '@/components/NewOrderModal';
 import Icon from '@/components/ui/icon';
 
 export default function Index() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showNewOrder, setShowNewOrder] = useState(false);
 
-  const filtered = orders.filter((o) => {
-    const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
-    const q = search.toLowerCase();
-    const matchesSearch =
-      !q ||
-      o.clientName.toLowerCase().includes(q) ||
-      o.clientPhone.includes(q) ||
-      o.cargoType.toLowerCase().includes(q) ||
-      o.addressFrom.toLowerCase().includes(q) ||
-      o.addressTo.toLowerCase().includes(q) ||
-      o.id.toLowerCase().includes(q);
-    return matchesStatus && matchesSearch;
-  });
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [filtered, all] = await Promise.all([
+        fetchOrders(statusFilter, search),
+        fetchOrders(),
+      ]);
+      setOrders(filtered);
+      setAllOrders(all);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, search]);
 
-  const handleStatusChange = (id: string, status: OrderStatus) => {
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  const handleStatusChange = async (id: string, status: OrderStatus) => {
+    await updateOrderStatus(id, status);
+    await loadOrders();
   };
 
-  const handleAddOrder = (order: Order) => {
-    setOrders((prev) => [order, ...prev]);
+  const handleAddOrder = async (order: Order) => {
+    await createOrder(order);
+    await loadOrders();
   };
 
   return (
@@ -43,7 +51,7 @@ export default function Index() {
       <AppHeader onNewOrder={() => setShowNewOrder(true)} />
 
       <div className="container mx-auto px-4 py-6">
-        <StatsBar orders={orders} />
+        <StatsBar orders={allOrders} />
         <OrderFilters
           search={search}
           onSearchChange={setSearch}
@@ -51,7 +59,12 @@ export default function Index() {
           onStatusChange={setStatusFilter}
         />
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+            <Icon name="Loader" size={36} className="mb-4 animate-spin opacity-40" />
+            <p className="text-sm">Загружаем заказы...</p>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
             <Icon name="PackageSearch" size={48} className="mb-4 opacity-40" />
             <p className="text-lg font-medium">Заказы не найдены</p>
@@ -59,7 +72,7 @@ export default function Index() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filtered.map((order) => (
+            {orders.map((order) => (
               <OrderCard
                 key={order.id}
                 order={order}
